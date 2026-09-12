@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { AppProvider } from './hooks/useAppState'
+import { ToastProvider } from './hooks/useToast'
 import Layout from './components/Layout'
 
 import Landing from './pages/Landing'
@@ -61,11 +62,13 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppProvider>
-          <AppRoutes />
-        </AppProvider>
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <AppProvider>
+            <AppRoutes />
+          </AppProvider>
+        </AuthProvider>
+      </ToastProvider>
     </BrowserRouter>
   )
 }

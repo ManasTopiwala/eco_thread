@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { RefreshCw, ArrowRight, Flame, Lightbulb, Sliders, Target, BarChart3, CheckCircle2 } from 'lucide-react'
 import { useAppState } from '../hooks/useAppState'
+import EchoDecLogo from '../components/EchoDecLogo'
 
 const FLOW_STEPS = [
   { icon: BarChart3, label: 'Industrial process', desc: 'Enter your energy, materials, waste and production data', color: '#6366F1' },
@@ -41,13 +42,8 @@ export default function Landing() {
         zIndex: 100,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: '32px', height: '32px', background: 'var(--color-loop)',
-            borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <RefreshCw size={18} color="white" />
-          </div>
-          <span style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 800, fontSize: '1.2rem' }}>EcoLoop</span>
+          <EchoDecLogo size={34} style={{ borderRadius: '8px' }} />
+          <span style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 800, fontSize: '1.2rem' }}>EchoDec</span>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button className="btn btn-secondary" onClick={() => navigate('/login')}
@@ -151,7 +147,7 @@ export default function Landing() {
             How it works
           </h2>
           <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', marginBottom: '56px', maxWidth: '560px', margin: '0 auto 56px' }}>
-            EcoLoop's differentiator is the connected chain from raw data to optimal intervention plan — not sustainability platitudes, but specific numbers.
+            EchoDec's differentiator is the connected chain from raw data to optimal intervention plan — not sustainability platitudes, but specific numbers.
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
             {FEATURES.map((f, i) => (
@@ -203,8 +199,8 @@ export default function Landing() {
         color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <RefreshCw size={14} color="var(--color-loop)" />
-          <span>EcoLoop</span>
+          <EchoDecLogo size={20} />
+          <span>EchoDec</span>
         </div>
         <span>Emission data is demo reference data — not verified regional factors.</span>
       </footer>
