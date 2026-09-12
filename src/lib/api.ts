@@ -3,10 +3,12 @@ import { SUPABASE_ANON_KEY } from './supabase'
 import type {
   ProcessData, EmissionResults, Recommendation,
 } from '../types'
+import { computeEmissions, buildRecommendations } from './calculator'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL || '/api',
   headers: { 'Content-Type': 'application/json' },
+  timeout: 4000, // 4s timeout before falling back
 })
 
 // Attach authorization headers automatically if available
@@ -22,8 +24,13 @@ api.interceptors.request.use((config) => {
 })
 
 export async function calculateEmissions(data: ProcessData): Promise<EmissionResults & Record<string, any>> {
-  const res = await api.post('/api/emissions/calculate', data)
-  return res.data
+  try {
+    const res = await api.post('/api/emissions/calculate', data)
+    return res.data
+  } catch (err) {
+    console.info('Backend API unavailable, using built-in emissions engine:', err)
+    return computeEmissions(data)
+  }
 }
 
 export async function generateRecommendations(params: {
@@ -34,8 +41,18 @@ export async function generateRecommendations(params: {
   rejected_pct?: number;
   [key: string]: any;
 }): Promise<{ recommendations: Recommendation[] }> {
-  const res = await api.post('/api/recommendations/generate', params)
-  return res.data
+  try {
+    const res = await api.post('/api/recommendations/generate', params)
+    if (res.data?.recommendations?.length) {
+      return res.data
+    }
+  } catch (err) {
+    console.info('Backend recommendation API unavailable, using built-in engine:', err)
+  }
+
+  const recommendations = buildRecommendations(params)
+  return { recommendations }
 }
 
 export default api
+

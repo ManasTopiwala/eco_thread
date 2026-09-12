@@ -4,20 +4,28 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend
 } from 'recharts'
-import { LayoutDashboard, TrendingDown, Leaf, DollarSign, Flame, AlertCircle, ArrowRight, Target } from 'lucide-react'
+import {
+  LayoutDashboard, TrendingDown, Leaf, DollarSign, Flame,
+  AlertCircle, ArrowRight, Target, Loader2, BarChart3, Building2
+} from 'lucide-react'
 import { useAppState } from '../hooks/useAppState'
 import { generateRecommendations } from '../lib/api'
 import { DEMO_EMISSION_RESULTS, DEMO_LABEL, formatCO2, formatINR, CHART_COLORS, SEVERITY_COLORS } from '../lib/demo'
 
 export default function Dashboard() {
-  const { emissionResults, recommendations, setRecommendations, processData, isDemo } = useAppState()
+  const {
+    emissionResults, recommendations, saveRecommendationsData,
+    processData, isDemo, loadingData, loadDemoData
+  } = useAppState()
   const navigate = useNavigate()
-  const results = emissionResults ?? DEMO_EMISSION_RESULTS
+
+  // Only use DEMO_EMISSION_RESULTS if user explicitly toggled demo mode
+  const results = isDemo ? (emissionResults ?? DEMO_EMISSION_RESULTS) : emissionResults
 
   useEffect(() => {
-    if (recommendations.length === 0 && results) {
-      const materials = processData?.materials.map(m => m.name) ?? ['Aluminium', 'Steel']
-      const wasteMethods = processData?.waste.map(w => w.disposal_method) ?? ['Landfill']
+    if (results && recommendations.length === 0) {
+      const materials = processData?.materials?.map(m => m.name) ?? ['Aluminium', 'Steel']
+      const wasteMethods = processData?.waste?.map(w => w.disposal_method) ?? ['Landfill']
       generateRecommendations({
         emission_results: results,
         industry: processData?.industry ?? 'Manufacturing',
@@ -26,14 +34,85 @@ export default function Dashboard() {
         rejected_pct: processData?.production?.[0]?.rejected_units
           ? (processData.production[0].rejected_units / processData.production[0].quantity) * 100
           : 2.5,
-      }).then(r => setRecommendations(r.recommendations)).catch(() => {})
+      }).then(r => {
+        if (r?.recommendations?.length) {
+          saveRecommendationsData(r.recommendations)
+        }
+      }).catch(() => {})
     }
-  }, [])
+  }, [recommendations.length, results, processData])
 
-  const totalWaste = processData?.waste.reduce((s, w) => s + w.quantity, 0) ?? 500
+  if (loadingData) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <Loader2 size={36} className="animate-spin" color="var(--color-loop)" style={{ margin: '0 auto 12px' }} />
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>Loading facility data from Supabase...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // When there is no assessment data in the database
+  if (!results) {
+    return (
+      <div className="animate-fade-in">
+        <div style={{ marginBottom: '28px' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '4px' }}>Dashboard</h1>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
+            Facility greenhouse gas metrics, leak points, and decarbonization roadmap.
+          </p>
+        </div>
+
+        <div className="card" style={{ padding: '60px 32px', textAlign: 'center', maxWidth: '640px', margin: '40px auto' }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '16px',
+            background: 'rgba(0, 184, 169, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 20px',
+          }}>
+            <BarChart3 size={32} color="var(--color-loop)" />
+          </div>
+
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '10px', color: 'var(--color-ink)' }}>
+            No Carbon Assessment Found
+          </h2>
+
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.925rem', lineHeight: 1.6, marginBottom: '28px' }}>
+            You haven't calculated any facility emissions yet. Setup your Industry Profile and enter your monthly process data to generate your real-time carbon footprint dashboard.
+          </p>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
+            <Link to="/industry-profile" className="btn btn-primary" style={{ padding: '12px 22px', fontSize: '0.9rem' }}>
+              <Building2 size={16} /> Setup Industry Profile
+            </Link>
+            <Link to="/process-data" className="btn btn-secondary" style={{ padding: '12px 22px', fontSize: '0.9rem' }}>
+              Enter Process Data <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          <div style={{ marginTop: '28px', paddingTop: '20px', borderTop: '1px solid var(--color-border)' }}>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={loadDemoData}
+              style={{ fontSize: '0.825rem', color: 'var(--color-text-muted)' }}
+            >
+              Or preview with sample demo data
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const totalWaste = processData?.waste?.reduce((s, w) => s + (w.unit === 'tonne' ? Number(w.quantity) * 1000 : Number(w.quantity) || 0), 0) ?? 0
   const potentialReduction = recommendations.reduce((s, r) => s + r.estimated_co2_reduction_tonnes, 0)
   const annualSaving = recommendations.reduce((s, r) => s + r.annual_saving_inr, 0)
-
 
   const pieData = results.sources.map(s => ({ name: s.category, value: s.percentage, tonnes: s.co2e_tonnes }))
 
@@ -45,7 +124,14 @@ export default function Dashboard() {
 
   const kpis = [
     { label: 'Total CO₂e / month', value: formatCO2(results.total_co2e_tonnes), icon: Flame, color: '#E5484D' },
-    { label: 'CO₂e per unit', value: `${(results.co2e_per_unit * 1000).toFixed(2)} kgCO₂e`, icon: LayoutDashboard, color: 'var(--color-loop)' },
+    {
+      label: 'CO₂e per unit',
+      value: results.co2e_per_unit > 0
+        ? `${(results.co2e_per_unit * 1000).toFixed(2)} kgCO₂e`
+        : 'N/A (No output units)',
+      icon: LayoutDashboard,
+      color: 'var(--color-loop)'
+    },
     { label: 'Total waste / month', value: `${totalWaste.toLocaleString()} kg`, icon: Leaf, color: '#F2A93C' },
     { label: 'Potential CO₂ reduction', value: formatCO2(potentialReduction), icon: TrendingDown, color: '#2BB673' },
     { label: 'Est. annual savings', value: formatINR(annualSaving), icon: DollarSign, color: '#6366F1' },
@@ -58,7 +144,11 @@ export default function Dashboard() {
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '4px' }}>Dashboard</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {isDemo && <span className="demo-label">🔬 {DEMO_LABEL}</span>}
-            {!emissionResults && <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>Showing demo data — <Link to="/process-data" style={{ color: 'var(--color-loop)' }}>enter your own data</Link></span>}
+            {emissionResults && !isDemo && (
+              <span style={{ color: '#2BB673', fontSize: '0.85rem', fontWeight: 600 }}>
+                ● Live Supabase Assessment
+              </span>
+            )}
           </div>
         </div>
         <Link to="/process-data" className="btn btn-primary" style={{ fontSize: '0.875rem' }}>

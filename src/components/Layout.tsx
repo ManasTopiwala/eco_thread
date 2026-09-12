@@ -1,8 +1,8 @@
-import { ReactNode, useState } from 'react'
+import { ReactNode, useState, useEffect } from 'react'
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Flame, Lightbulb,
-  Building2, Database, LogOut, ChevronRight, ChevronLeft, Menu, RefreshCw
+  Building2, Database, LogOut, ChevronRight, ChevronLeft, Menu, RefreshCw, X, Loader2
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useAppState } from '../hooks/useAppState'
@@ -21,15 +21,36 @@ const DATA_ITEMS = [
 
 export default function Layout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [signingOut, setSigningOut] = useState(false)
   const { signOut, user } = useAuth()
   const { isDemo, emissionResults } = useAppState()
   const navigate = useNavigate()
   const location = useLocation()
 
-  const handleSignOut = async () => {
-    await signOut()
-    navigate('/login')
+  const confirmSignOut = async () => {
+    setSigningOut(true)
+    try {
+      await signOut()
+      setShowLogoutModal(false)
+      navigate('/login')
+    } catch (err) {
+      console.error('Sign out error:', err)
+    } finally {
+      setSigningOut(false)
+    }
   }
+
+  // Dismiss logout modal on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showLogoutModal && !signingOut) {
+        setShowLogoutModal(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showLogoutModal, signingOut])
 
   const isLoopPage = ['/hotspots', '/recommendations'].includes(location.pathname)
 
@@ -236,7 +257,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           )}
 
           <button
-            onClick={handleSignOut}
+            onClick={() => setShowLogoutModal(true)}
             title="Sign out"
             style={{
               display: 'flex',
@@ -346,6 +367,159 @@ export default function Layout({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
+
+      {/* Confirmation Modal Popup for Logout */}
+      {showLogoutModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="logout-modal-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(5px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px',
+            animation: 'fadeIn 0.15s ease-out',
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !signingOut) {
+              setShowLogoutModal(false)
+            }
+          }}
+        >
+          <div
+            className="animate-slide-up"
+            style={{
+              maxWidth: '440px',
+              width: '100%',
+              padding: '28px',
+              borderRadius: '16px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              position: 'relative',
+              background: 'var(--color-surface, #ffffff)',
+              border: '1px solid var(--color-border)',
+            }}
+          >
+            {/* Close X button */}
+            <button
+              onClick={() => !signingOut && setShowLogoutModal(false)}
+              disabled={signingOut}
+              aria-label="Close modal"
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'none',
+                border: 'none',
+                cursor: signingOut ? 'not-allowed' : 'pointer',
+                color: 'var(--color-text-muted)',
+                padding: '6px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background 0.15s ease, color 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (!signingOut) {
+                  e.currentTarget.style.background = 'rgba(0,0,0,0.05)'
+                  e.currentTarget.style.color = 'var(--color-ink)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'none'
+                e.currentTarget.style.color = 'var(--color-text-muted)'
+              }}
+            >
+              <X size={18} />
+            </button>
+
+            {/* Icon & Message */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '20px' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                background: 'rgba(239, 68, 68, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#EF4444',
+                flexShrink: 0,
+              }}>
+                <LogOut size={22} />
+              </div>
+              <div>
+                <h3
+                  id="logout-modal-title"
+                  style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 6px 0', color: 'var(--color-ink)' }}
+                >
+                  Sign out of EchoDec?
+                </h3>
+                <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                  Are you sure you want to sign out? You will need to log back in to access your facility's emissions roadmap, hotspot diagnostics, and assessment reports.
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowLogoutModal(false)}
+                disabled={signingOut}
+                style={{ padding: '10px 18px', fontSize: '0.875rem' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmSignOut}
+                disabled={signingOut}
+                style={{
+                  background: '#EF4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '10px 20px',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  cursor: signingOut ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 2px 8px rgba(239, 68, 68, 0.3)',
+                  transition: 'background 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  if (!signingOut) e.currentTarget.style.background = '#DC2626'
+                }}
+                onMouseLeave={(e) => {
+                  if (!signingOut) e.currentTarget.style.background = '#EF4444'
+                }}
+              >
+                {signingOut ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Signing out...
+                  </>
+                ) : (
+                  <>
+                    <LogOut size={16} />
+                    Sign out
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

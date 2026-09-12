@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Flame, AlertTriangle, ArrowRight, TrendingDown,
-  Zap, Recycle, Trash2, CheckCircle2, ChevronRight, Info
+  Zap, Recycle, Trash2, CheckCircle2, ChevronRight, Info, Loader2, BarChart3
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -12,11 +12,65 @@ import { useAppState } from '../hooks/useAppState'
 import { DEMO_EMISSION_RESULTS, DEMO_LABEL, formatCO2, formatINR, SEVERITY_COLORS, CHART_COLORS } from '../lib/demo'
 
 export default function Hotspots() {
-  const { emissionResults, processData, isDemo } = useAppState()
+  const { emissionResults, isDemo, loadingData } = useAppState()
   const navigate = useNavigate()
-  const results = emissionResults ?? DEMO_EMISSION_RESULTS
+  const results = isDemo ? (emissionResults ?? DEMO_EMISSION_RESULTS) : emissionResults
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+
+  if (loadingData) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <Loader2 size={36} className="animate-spin" color="var(--color-loop)" style={{ margin: '0 auto 12px' }} />
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>Loading hotspot analytics...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!results) {
+    return (
+      <div className="animate-fade-in">
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+            <div className="loop-icon" style={{ background: '#FEE2E2', color: 'var(--color-hotspot-high)' }}>
+              <Flame size={18} />
+            </div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Hotspot Analysis</h1>
+          </div>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+            Pinpoint the highest-emitting stages and material streams across your manufacturing lifecycle.
+          </p>
+        </div>
+
+        <div className="card" style={{ padding: '60px 32px', textAlign: 'center', maxWidth: '640px', margin: '40px auto' }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '16px',
+            background: 'rgba(239, 68, 68, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 20px',
+            color: '#EF4444'
+          }}>
+            <Flame size={32} />
+          </div>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '10px', color: 'var(--color-ink)' }}>
+            No Hotspot Diagnostics Available
+          </h2>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.925rem', lineHeight: 1.6, marginBottom: '28px' }}>
+            Hotspot diagnostics and intensity rankings are computed once you record your facility's energy, raw materials, production output, and waste streams.
+          </p>
+          <Link to="/process-data" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 22px', fontSize: '0.9rem' }}>
+            Enter Process Data <ArrowRight size={16} />
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   // Sort sources by emissions descending
   const sortedSources = [...results.sources].sort((a, b) => b.co2e_tonnes - a.co2e_tonnes)

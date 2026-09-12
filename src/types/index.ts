@@ -20,7 +20,7 @@ export interface EmissionResults {
 export interface EnergyEntry {
   source: 'Electricity' | 'Coal' | 'Natural Gas' | 'Diesel' | 'Fuel Oil' | 'LPG' | 'Renewable';
   quantity: number;
-  unit: 'kWh' | 'MWh' | 'GJ' | 'litre' | 'L';
+  unit: 'kWh' | 'MWh' | 'GJ' | 'litre' | 'L' | 'kg' | 'tonne' | 'm3';
   monthly_consumption?: number;
 }
 
