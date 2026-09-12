@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Flame, AlertTriangle, ArrowRight, TrendingDown,
-  Zap, Recycle, Trash2, Sliders, CheckCircle2, ChevronRight, Info
+  Zap, Recycle, Trash2, CheckCircle2, ChevronRight, Info
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -117,7 +117,7 @@ export default function Hotspots() {
             </div>
           </div>
           <Link
-            to="/simulator"
+            to="/recommendations"
             className="btn"
             style={{
               background: '#BE123C',
@@ -126,7 +126,7 @@ export default function Hotspots() {
               boxShadow: '0 2px 8px rgba(190, 18, 60, 0.25)'
             }}
           >
-            <Sliders size={14} /> Simulate Reduction
+            View Recommendations
           </Link>
         </div>
       )}
@@ -252,9 +252,6 @@ export default function Hotspots() {
               <div style={{ display: 'flex', gap: '10px' }}>
                 <Link to="/recommendations" className="btn btn-primary" style={{ fontSize: '0.8rem', padding: '8px 14px' }}>
                   Recommendations
-                </Link>
-                <Link to="/simulator" className="btn btn-secondary" style={{ fontSize: '0.8rem', padding: '8px 14px' }}>
-                  Simulation Model
                 </Link>
               </div>
             </div>

@@ -1,20 +1,18 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
 import {
-  Lightbulb, Check, Plus, Sliders, ArrowRight, ShieldCheck,
+  Lightbulb, ShieldCheck,
   TrendingDown, DollarSign, Clock, RefreshCw, Filter, Sparkles
 } from 'lucide-react'
 import { useAppState } from '../hooks/useAppState'
 import { generateRecommendations } from '../lib/api'
 import { DEMO_EMISSION_RESULTS, DEMO_LABEL, formatCO2, formatINR } from '../lib/demo'
-import type { Recommendation, ActionPlanItem } from '../types'
+import type { Recommendation } from '../types'
 
 export default function Recommendations() {
   const {
     emissionResults, recommendations, setRecommendations,
-    processData, addToActionPlan, actionPlanItems, isDemo
+    processData, isDemo
   } = useAppState()
-  const navigate = useNavigate()
 
   const [loading, setLoading] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string>('All')
@@ -55,28 +53,7 @@ export default function Recommendations() {
     }
   }, [])
 
-  const isItemInPlan = (recId: string) => {
-    return actionPlanItems.some(item => item.intervention_id === recId)
-  }
 
-  const handleAddToPlan = (rec: Recommendation) => {
-    if (isItemInPlan(rec.id)) return
-
-    const midCost = (rec.cost_range_min_inr + rec.cost_range_max_inr) / 2
-    const newItem: ActionPlanItem = {
-      id: `plan-${Date.now()}-${rec.id}`,
-      intervention_id: rec.id,
-      name: rec.name,
-      estimated_cost_inr: midCost,
-      expected_co2_reduction_tonnes: rec.estimated_co2_reduction_tonnes,
-      status: 'Planned',
-      start_date: new Date().toISOString().split('T')[0],
-    }
-
-    addToActionPlan(newItem)
-    setToastMessage(`Added "${rec.name}" to your Action Plan!`)
-    setTimeout(() => setToastMessage(null), 3000)
-  }
 
   // Filter and sort recommendations
   const filtered = recommendations
@@ -91,30 +68,6 @@ export default function Recommendations() {
 
   return (
     <div className="animate-fade-in">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          background: 'var(--color-ink)',
-          color: 'white',
-          padding: '12px 20px',
-          borderRadius: '8px',
-          boxShadow: '0 4px 14px rgba(0,0,0,0.2)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          zIndex: 1000,
-          animation: 'slideUp 0.3s ease',
-        }}>
-          <Check size={16} color="var(--color-loop)" />
-          <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{toastMessage}</span>
-          <Link to="/action-plan" style={{ color: 'var(--color-loop)', marginLeft: '8px', fontSize: '0.875rem', textDecoration: 'underline' }}>
-            View Plan
-          </Link>
-        </div>
-      )}
 
       {/* Header */}
       <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
@@ -142,13 +95,6 @@ export default function Recommendations() {
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             {loading ? 'Evaluating...' : 'Refresh Scoring'}
-          </button>
-          <button
-            onClick={() => navigate('/simulator')}
-            className="btn btn-primary"
-            style={{ fontSize: '0.85rem' }}
-          >
-            Open Simulator <ArrowRight size={14} />
           </button>
         </div>
       </div>
@@ -227,7 +173,6 @@ export default function Recommendations() {
       {/* Recommendations Cards List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
         {filtered.map((rec, idx) => {
-          const inPlan = isItemInPlan(rec.id)
 
           return (
             <div key={rec.id} className="card" style={{ padding: '22px 26px', position: 'relative' }}>
@@ -349,38 +294,7 @@ export default function Recommendations() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px' }}>
-                <Link
-                  to="/simulator"
-                  className="btn btn-secondary"
-                  style={{ fontSize: '0.8rem', padding: '8px 14px' }}
-                >
-                  <Sliders size={13} /> Simulate Impact
-                </Link>
-                <button
-                  onClick={() => handleAddToPlan(rec)}
-                  disabled={inPlan}
-                  className="btn btn-primary"
-                  style={{
-                    fontSize: '0.8rem',
-                    padding: '8px 16px',
-                    background: inPlan ? '#E2E8F0' : 'var(--color-loop)',
-                    color: inPlan ? '#64748B' : 'white',
-                    cursor: inPlan ? 'default' : 'pointer',
-                  }}
-                >
-                  {inPlan ? (
-                    <>
-                      <Check size={14} /> Added to Plan
-                    </>
-                  ) : (
-                    <>
-                      <Plus size={14} /> Add to Action Plan
-                    </>
-                  )}
-                </button>
-              </div>
+
             </div>
           )
         })}

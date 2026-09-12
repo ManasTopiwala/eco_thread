@@ -12,9 +12,6 @@ import IndustryProfile from './pages/IndustryProfile'
 import ProcessData from './pages/ProcessData'
 import Hotspots from './pages/Hotspots'
 import Recommendations from './pages/Recommendations'
-import Simulator from './pages/Simulator'
-import Optimizer from './pages/Optimizer'
-import ActionPlan from './pages/ActionPlan'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -51,9 +48,6 @@ function AppRoutes() {
       <Route path="/process-data" element={<ProtectedRoute><ProcessData /></ProtectedRoute>} />
       <Route path="/hotspots" element={<ProtectedRoute><Hotspots /></ProtectedRoute>} />
       <Route path="/recommendations" element={<ProtectedRoute><Recommendations /></ProtectedRoute>} />
-      <Route path="/simulator" element={<ProtectedRoute><Simulator /></ProtectedRoute>} />
-      <Route path="/optimizer" element={<ProtectedRoute><Optimizer /></ProtectedRoute>} />
-      <Route path="/action-plan" element={<ProtectedRoute><ActionPlan /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

@@ -1,8 +1,8 @@
 import { ReactNode, useState } from 'react'
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard, Flame, Lightbulb, Sliders, Target, ClipboardList,
-  Building2, Database, RefreshCw, LogOut, ChevronRight, ChevronLeft, Menu
+  LayoutDashboard, Flame, Lightbulb,
+  Building2, Database, LogOut, ChevronRight, ChevronLeft, Menu, RefreshCw
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useAppState } from '../hooks/useAppState'
@@ -12,9 +12,6 @@ const NAV_ITEMS = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/hotspots', icon: Flame, label: 'Hotspots' },
   { to: '/recommendations', icon: Lightbulb, label: 'Recommendations' },
-  { to: '/simulator', icon: Sliders, label: 'Simulator' },
-  { to: '/optimizer', icon: Target, label: 'Optimizer' },
-  { to: '/action-plan', icon: ClipboardList, label: 'Action Plan' },
 ]
 
 const DATA_ITEMS = [
@@ -34,7 +31,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     navigate('/login')
   }
 
-  const isLoopPage = ['/hotspots', '/recommendations', '/simulator', '/optimizer'].includes(location.pathname)
+  const isLoopPage = ['/hotspots', '/recommendations'].includes(location.pathname)
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>

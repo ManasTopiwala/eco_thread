@@ -10,7 +10,7 @@ import { generateRecommendations } from '../lib/api'
 import { DEMO_EMISSION_RESULTS, DEMO_LABEL, formatCO2, formatINR, CHART_COLORS, SEVERITY_COLORS } from '../lib/demo'
 
 export default function Dashboard() {
-  const { emissionResults, recommendations, setRecommendations, processData, isDemo, actionPlanItems } = useAppState()
+  const { emissionResults, recommendations, setRecommendations, processData, isDemo } = useAppState()
   const navigate = useNavigate()
   const results = emissionResults ?? DEMO_EMISSION_RESULTS
 
@@ -34,10 +34,6 @@ export default function Dashboard() {
   const potentialReduction = recommendations.reduce((s, r) => s + r.estimated_co2_reduction_tonnes, 0)
   const annualSaving = recommendations.reduce((s, r) => s + r.annual_saving_inr, 0)
 
-  // Completed plan items reduce the total
-  const completedReduction = actionPlanItems
-    .filter(i => i.status === 'Completed')
-    .reduce((s, i) => s + i.expected_co2_reduction_tonnes, 0)
 
   const pieData = results.sources.map(s => ({ name: s.category, value: s.percentage, tonnes: s.co2e_tonnes }))
 
@@ -48,7 +44,7 @@ export default function Dashboard() {
   }))
 
   const kpis = [
-    { label: 'Total CO₂e / month', value: formatCO2(results.total_co2e_tonnes - completedReduction), icon: Flame, color: '#E5484D', change: completedReduction > 0 ? `-${formatCO2(completedReduction)} from completed actions` : undefined },
+    { label: 'Total CO₂e / month', value: formatCO2(results.total_co2e_tonnes), icon: Flame, color: '#E5484D' },
     { label: 'CO₂e per unit', value: `${(results.co2e_per_unit * 1000).toFixed(2)} kgCO₂e`, icon: LayoutDashboard, color: 'var(--color-loop)' },
     { label: 'Total waste / month', value: `${totalWaste.toLocaleString()} kg`, icon: Leaf, color: '#F2A93C' },
     { label: 'Potential CO₂ reduction', value: formatCO2(potentialReduction), icon: TrendingDown, color: '#2BB673' },
@@ -81,7 +77,6 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="kpi-value">{k.value}</div>
-            {k.change && <div className="kpi-change" style={{ color: 'var(--color-hotspot-low)' }}>✓ {k.change}</div>}
           </div>
         ))}
       </div>
@@ -179,25 +174,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Target progress (if action plan has items) */}
-      {actionPlanItems.length > 0 && (
-        <div className="card" style={{ marginTop: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-            <Target size={18} color="var(--color-loop)" />
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700 }}>Action plan progress</h3>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div className="progress-bar" style={{ flex: 1 }}>
-              <div className="progress-fill" style={{
-                width: `${Math.min(100, (completedReduction / results.total_co2e_tonnes) * 100)}%`
-              }} />
-            </div>
-            <span style={{ fontWeight: 700, color: 'var(--color-loop)', whiteSpace: 'nowrap' }}>
-              {formatCO2(completedReduction)} reduced ({actionPlanItems.filter(i => i.status === 'Completed').length}/{actionPlanItems.length} actions)
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
