@@ -10,12 +10,12 @@ import {
 } from 'lucide-react'
 import { useAppState } from '../hooks/useAppState'
 import { generateRecommendations } from '../lib/api'
-import { DEMO_EMISSION_RESULTS, DEMO_LABEL, formatCO2, formatINR, CHART_COLORS, SEVERITY_COLORS } from '../lib/demo'
+import { DEMO_EMISSION_RESULTS, DEMO_PROCESS_DATA, DEMO_PROFILE, DEMO_LABEL, formatCO2, formatINR, CHART_COLORS, SEVERITY_COLORS } from '../lib/demo'
 
 export default function Dashboard() {
   const {
     emissionResults, recommendations, saveRecommendationsData,
-    processData, isDemo, loadingData, loadDemoData
+    processData, isDemo, loadingData, loadDemoData, industryProfile
   } = useAppState()
   const navigate = useNavigate()
 
@@ -24,23 +24,18 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (results && recommendations.length === 0) {
-      const materials = processData?.materials?.map(m => m.name) ?? ['Aluminium', 'Steel']
-      const wasteMethods = processData?.waste?.map(w => w.disposal_method) ?? ['Landfill']
       generateRecommendations({
         emission_results: results,
-        industry: processData?.industry ?? 'Manufacturing',
-        materials,
-        waste_disposal_methods: wasteMethods,
-        rejected_pct: processData?.production?.[0]?.rejected_units
-          ? (processData.production[0].rejected_units / processData.production[0].quantity) * 100
-          : 2.5,
+        process_data: isDemo ? DEMO_PROCESS_DATA : processData,
+        industry_profile: isDemo ? (DEMO_PROFILE as any) : industryProfile,
+        industry: processData?.industry ?? industryProfile?.industry_type ?? 'Manufacturing',
       }).then(r => {
         if (r?.recommendations?.length) {
           saveRecommendationsData(r.recommendations)
         }
       }).catch(() => {})
     }
-  }, [recommendations.length, results, processData])
+  }, [recommendations.length, results, processData, industryProfile, isDemo])
 
   if (loadingData) {
     return (

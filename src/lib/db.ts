@@ -229,6 +229,17 @@ export async function saveRecommendations(
 ) {
   if (!recs.length) return []
 
+  try {
+    // Clean up previous unadopted suggested recommendations to keep recommendations fresh and deduplicated
+    await supabase
+      .from('recommendations')
+      .delete()
+      .eq('user_id', userId)
+      .eq('status', 'suggested')
+  } catch (cleanErr) {
+    console.warn('Could not clean prior recommendations:', cleanErr)
+  }
+
   const rows = recs.map(r => ({
     user_id: userId,
     assessment_id: assessmentId || null,
@@ -247,7 +258,12 @@ export async function saveRecommendations(
     payback_years: r.payback_years,
     feasibility_score: r.feasibility_score,
     circularity_score: r.circularity_score,
-    status: 'suggested',
+    status: r.status || 'suggested',
+    target_material: r.target_material || '',
+    target_waste_stream: r.target_waste_stream || '',
+    waste_reduction_tonnes: r.waste_reduction_tonnes || 0,
+    annual_material_recovered_tonnes: r.annual_material_recovered_tonnes || 0,
+    action_steps: (r.action_steps as any) || [],
   }))
 
   const { data, error } = await supabase
@@ -274,7 +290,7 @@ export async function getRecommendations(userId: string): Promise<Recommendation
     throw error
   }
 
-  return (data || []).map(r => ({
+  return (data || []).map((r: any) => ({
     id: r.rec_id || r.id,
     name: r.name,
     description: r.description || '',
@@ -290,6 +306,12 @@ export async function getRecommendations(userId: string): Promise<Recommendation
     payback_years: Number(r.payback_years),
     feasibility_score: Number(r.feasibility_score),
     circularity_score: Number(r.circularity_score),
+    status: r.status || 'suggested',
+    target_material: r.target_material || '',
+    target_waste_stream: r.target_waste_stream || '',
+    waste_reduction_tonnes: Number(r.waste_reduction_tonnes || 0),
+    annual_material_recovered_tonnes: Number(r.annual_material_recovered_tonnes || 0),
+    action_steps: Array.isArray(r.action_steps) ? r.action_steps : [],
   }))
 }
 

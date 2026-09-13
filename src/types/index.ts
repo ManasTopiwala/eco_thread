@@ -71,6 +71,42 @@ export interface Recommendation {
   payback_years: number;
   feasibility_score: number;
   circularity_score: number;
+  status?: string;
+  target_material?: string;
+  target_waste_stream?: string;
+  waste_reduction_tonnes?: number;
+  annual_material_recovered_tonnes?: number;
+  action_steps?: string[];
+}
+
+export interface FacilityWasteDiagnosis {
+  total_raw_material_kg: number;
+  total_raw_material_tonnes: number;
+  virgin_material_pct: number;
+  total_waste_kg: number;
+  total_waste_tonnes: number;
+  landfill_waste_kg: number;
+  landfill_diversion_potential_pct: number;
+  material_waste_ratio_pct: number;
+  uncaptured_scrap_value_inr: number;
+  primary_material: string;
+  primary_waste_stream: string;
+  defect_rate_pct: number;
+}
+
+export interface RecommendationResponse {
+  recommendations: Recommendation[];
+  diagnosis?: FacilityWasteDiagnosis;
+}
+
+export interface RecommendationRequest {
+  emission_results?: EmissionResults;
+  process_data?: ProcessData;
+  industry_profile?: IndustryProfile | null;
+  industry?: string;
+  materials?: string[];
+  waste_disposal_methods?: string[];
+  rejected_pct?: number;
 }
 
 

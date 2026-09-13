@@ -226,6 +226,11 @@ export type Database = {
           updated_at: string
           user_id: string
           why: string | null
+          target_material?: string | null
+          target_waste_stream?: string | null
+          waste_reduction_tonnes?: number | null
+          annual_material_recovered_tonnes?: number | null
+          action_steps?: Json | null
         }
         Insert: {
           annual_saving_inr?: number
@@ -249,6 +254,11 @@ export type Database = {
           updated_at?: string
           user_id: string
           why?: string | null
+          target_material?: string | null
+          target_waste_stream?: string | null
+          waste_reduction_tonnes?: number | null
+          annual_material_recovered_tonnes?: number | null
+          action_steps?: Json | null
         }
         Update: {
           annual_saving_inr?: number
@@ -272,6 +282,11 @@ export type Database = {
           updated_at?: string
           user_id?: string
           why?: string | null
+          target_material?: string | null
+          target_waste_stream?: string | null
+          waste_reduction_tonnes?: number | null
+          annual_material_recovered_tonnes?: number | null
+          action_steps?: Json | null
         }
         Relationships: [
           {
